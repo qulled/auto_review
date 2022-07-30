@@ -13,6 +13,18 @@ import time
 import json
 
 
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
 options = Options()
 
 prefs = {'download.default_directory': r'C:\Users\ikaty\PycharmProjects\parser_margin\excel_docs'}
@@ -100,33 +112,33 @@ def bot_alert(dict):
 
 
 
-def bot_alert_reviews(count,article):
+def bot_alert_reviews(count,article,name,in_article):
     if count == 0:
         with open('chat_id.json') as json_file:
             data = json.load(json_file)
             for chat_id in data:
                 requests.get(f'https://api.telegram.org/bot5523517805:AAEtoirEqgvK0kiSCaG655pAbgVkfSC-dn4/sendMessage?chat_id={chat_id}&text=     !ВНИМАНИЕ! \n'
-                             f'!!!На артикуле: {article}  отзывов - {count} шт.!!! Невозможно оставить отзыв!!!')
+                             f'!!!У товара: {article}, {name}, {in_article} закончился лимит отзывов! Невозможно оставить отзыв!!!')
     elif count < 20:
         with open('chat_id.json') as json_file:
             data = json.load(json_file)
             for chat_id in data:
-                requests.get(f'https://api.telegram.org/bot5523517805:AAEtoirEqgvK0kiSCaG655pAbgVkfSC-dn4/sendMessage?chat_id={chat_id}&text='f'На артикуле: {article} возможно сделать не более {count} шт. отзывов!')
+                requests.get(f'https://api.telegram.org/bot5523517805:AAEtoirEqgvK0kiSCaG655pAbgVkfSC-dn4/sendMessage?chat_id={chat_id}&text='f'У товара: {article}, {name}, {in_article} лимит отзывов составляет {count} шт.!')
 
 
 def bot_alert_list_feed(count):
-    if count < 0:
+    if count == 0:
         with open('chat_id.json') as json_file:
             data = json.load(json_file)
             for chat_id in data:
                 requests.get(f'https://api.telegram.org/bot5523517805:AAEtoirEqgvK0kiSCaG655pAbgVkfSC-dn4/sendMessage?chat_id={chat_id}&text=     !ВНИМАНИЕ! \n'
-                             f'!!!В перечне отзывов осталось {count} шт.!!!')
-    if count < 10:
+                             f'!!!В таблице закончились отзывы, необходимо обновить таблицу!!!')
+    elif count <= 30:
         with open('chat_id.json') as json_file:
             data = json.load(json_file)
             for chat_id in data:
                 requests.get(f'https://api.telegram.org/bot5523517805:AAEtoirEqgvK0kiSCaG655pAbgVkfSC-dn4/sendMessage?chat_id={chat_id}&text='
-                             f'В перечне отзывов осталось {count} шт.!')
+                             f'В таблице осталось {count} отзывов!')
 
 
 
