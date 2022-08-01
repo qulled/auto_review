@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import os
 import pickle
+import random
 import time
 
 from bs4 import BeautifulSoup
@@ -47,7 +48,7 @@ def order_review(dict_article):
         in_article = dict_article.get(key_word)[1]
         check = dict_article.get(key_word)[3]
         if check == '+':
-            with open(f'up_feedbacks/list_reviews_opponent_{article}.json') as f:
+            with open(f'up_feedbacks/list_reviews_opponent_{article}.json',encoding='UTF-8') as f:
                 list_review = json.load(f)
             if len(list_review) == 0:
                 bot_alert_list_feed(len(list_review))
@@ -60,12 +61,14 @@ def order_review(dict_article):
                     exit()
                 else:
                     try:
-                        search_article_button = driver.find_element(By.TAG_NAME,'input')
-                        search_article_button.send_keys(article)
-                        time.sleep(2)
-                        search_button = driver.find_element(By.CLASS_NAME, 'search__btn-search')
-                        search_button.click()
-                        time.sleep(2)
+                        # search_article_button = driver.find_element(By.TAG_NAME,'input')
+                        # search_article_button.send_keys(article)
+                        # time.sleep(2)
+                        # search_button = driver.find_element(By.CLASS_NAME, 'search__btn-search')
+                        # search_button.click()
+                        # time.sleep(2)
+                        print(f'https://app.mpboost.pro/reviews?search={article}')
+                        driver.get(f'https://app.mpboost.pro/reviews?search={article}')
                         """проверка остатка отзывов на товаре"""
                         driver.refresh()
                         time.sleep(2)
@@ -80,37 +83,50 @@ def order_review(dict_article):
                         """заказ отзыва"""
                         driver.execute_script('arguments[0].click();', WebDriverWait(driver, 20).until(
                             EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/div/div[1]/div/div/div[3]/ul/li/button'))))
-                        time.sleep(3)
+                        print('начали заказ')
+                        time.sleep(2)
+                        chose_size_button = driver.find_element(By.CLASS_NAME,'v-dropdown-menu__trigger')
+                        chose_size_button.click()
+                        print('меню размера')
+                        time.sleep(1)
+                        size_button = driver.find_elements(By.CLASS_NAME,'option__btn')
+                        click_size_button = size_button[random.randint(0,len(size_button)-1)]
+                        click_size_button.click()
+                        print('выбрали размер')
+                        time.sleep(1)
                         pvz_button = driver.find_element(By.CLASS_NAME, 'vs__selected-options')
                         pvz_button.click()
                         take_old_pvz = driver.find_element(By.ID, 'vs1__option-0')
                         take_old_pvz.click()
-                        time.sleep(2)
+                        time.sleep(1)
+                        print('выбрали ПВЗ')
                         input_text_reviews = driver.find_elements(By.TAG_NAME,'textarea')
-                        time.sleep(2)
+                        time.sleep(1)
                         input_text_reviews[0].click()
-                        time.sleep(2)
+                        time.sleep(1)
                         # driver.execute_script("arguments[0].innerHTML = '{}'".format(list_review[0]), input_text_reviews[0])
                         # time.sleep(5)
                         input_text_reviews[0].send_keys(list_review[0])
+                        print('встввили отзыв')
                         list_review.remove(list_review[0])
                         with open(f'up_feedbacks/list_reviews_opponent_{article}.json', 'w', encoding='UTF-8') as outfile:
                             json.dump(list_review, outfile)
                         driver.execute_script('arguments[0].click();', WebDriverWait(driver, 20).until(
                         EC.element_to_be_clickable(
                             (By.XPATH, '/html/body/div[4]/div[1]/div/div/div/div/div/div/div[2]/div[8]/button[2]'))))
+                        print('окончили заказ, отправили отзыв')
                         # close_but = driver.find_element(By.XPATH,'/html/body/div[4]/div[1]/div/div/div/div/button')
                         # close_but.click()
-                        time.sleep(7)
+                        time.sleep(2)
                     except Exception as e:
                         driver.quit()
                         print('e:', e)
-                    finally:
-                        search_article_button = driver.find_element(By.TAG_NAME,'input')
-                        search_article_button.click()
-                        time.sleep(1)
-                        search_article_button.send_keys(Keys.CONTROL,'a')
-                        search_article_button.send_keys(Keys.BACKSPACE)
+                    # finally:
+                    #     search_article_button = driver.find_element(By.TAG_NAME,'input')
+                    #     search_article_button.click()
+                    #     time.sleep(1)
+                    #     search_article_button.send_keys(Keys.CONTROL,'a')
+                    #     search_article_button.send_keys(Keys.BACKSPACE)
         elif check == '-':
                 count = '0'
                 bot_alert_reviews(int(count), article, name, in_article)

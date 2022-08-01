@@ -119,11 +119,14 @@ def get_article(table_id):
                     result = sheet.values().get(spreadsheetId='1LMqyN5w81xnRfvNf0CE75ozH7zMcTLhvYiNjTxHDURo',
                                                 range=f'{month}.{year}', majorDimension='ROWS').execute()
                     values = result.get('values', [])
-                    for row in values[1:]:
-                        a_article = row[6]
-                        if a_article == article:
-                            articles[article] = [row[3].replace('\n',' '),row[5],range_name,'+']
-    with open(f'up_feedbacks/check_article.json', 'w', encoding='UTF-8') as outfile:
+                    for row in values[2:]:
+                        try:
+                            a_article = row[6]
+                            if a_article == article:
+                                articles[article] = [row[3].replace('\n',' '),row[5],range_name,'+']
+                        except Exception as e:
+                            pass
+    with open(f'up_feedbacks/check_article.json', 'w',encoding='UTF-8') as outfile:
         json.dump(articles, outfile,ensure_ascii=False)
     return articles
 
@@ -164,7 +167,9 @@ def final_dict(url):
     return dict_article
 
 
-def get_feedback_opponent(table_id,dict_article):
+def get_feedback_opponent(table_id):
+    with open('up_feedbacks/check_article.json','r',encoding='UTF-8') as f:
+        dict_article = json.load(f)
     for article in dict_article:
         range_name =dict_article.get(article)[2]
         print(range_name)
@@ -184,7 +189,7 @@ def get_feedback_opponent(table_id,dict_article):
                         list_reviews_opponent.append(row[0])
         except Exception as e:
             print(e)
-        with open(f'up_feedbacks/list_reviews_opponent_{article}.json', 'w') as outfile:
+        with open(f'up_feedbacks/list_reviews_opponent_{article}.json', 'w', encoding='UTF-8') as outfile:
             json.dump(list_reviews_opponent, outfile,ensure_ascii=False)
     return
 
@@ -193,6 +198,7 @@ if __name__ == "__main__":
     url = 'https://app.mpboost.pro/reviews'
     table_id = SPREADSHEET_OPPONENT
     # get_feedback()
-    get_article(table_id)
-    # get_feedback_opponent(table_id, final_dict(get_article(table_id), url))
+    # get_article(table_id)
+    get_feedback_opponent(table_id)
+    # final_dict('https://app.mpboost.pro/reviews')
 
