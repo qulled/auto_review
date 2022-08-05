@@ -11,11 +11,11 @@ import os
 import json
 import datetime as dt
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from bs4 import BeautifulSoup
 
 
@@ -49,26 +49,7 @@ if os.path.exists(dotenv_path):
 load_dotenv('.env ')
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 SPREADSHEET_OPPONENT = os.getenv('SPREADSHEET_OPPONENT')
-
-options = Options()
-
-prefs = {'download.default_directory': r'C:\Users\ikaty\PycharmProjects\parser_margin\excel_docs'}
-
-options.add_experimental_option('prefs', prefs)
-options.add_argument("--disable-blink-features")
-options.add_argument("--disable-blink-features=AutomationControlled")
-options.add_argument("--start-maximized")
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-options.add_experimental_option('useAutomationExtension', False)
-
-
-options.add_argument('--headless')
-
-driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
-driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-    "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36'})
-
+GH_TOKEN = os.getenv('GH_TOKEN')
 
 def convert_to_column_letter(column_number):
     column_letter = ''
@@ -100,9 +81,13 @@ def get_feedback():
 
 
 def get_article(table_id):
+    with open('up_feedbacks/check_article.json', encoding='UTF-8') as f:
+        dict_article = json.load(f)
+    article_list = []
+    for key_word in dict_article:
+        article_list.append(key_word)
     month = dt.datetime.now().strftime('%m')
     year = dt.datetime.now().strftime('%Y')
-    articles = {}
     service = build('sheets', 'v4', credentials=credentials)
     sheet_metadata = service.spreadsheets().get(spreadsheetId=table_id).execute()
     for items in sheet_metadata['sheets']:
@@ -122,16 +107,24 @@ def get_article(table_id):
                     for row in values[2:]:
                         try:
                             a_article = row[6]
-                            if a_article == article:
-                                articles[article] = [row[3].replace('\n',' '),row[5],range_name,'+']
+                            if a_article == article and a_article not in article_list:
+                                dict_article[article] = [row[3].replace('\n',' '),row[5],range_name,'+']
                         except Exception as e:
                             pass
-    with open(f'up_feedbacks/check_article.json', 'w',encoding='UTF-8') as outfile:
-        json.dump(articles, outfile,ensure_ascii=False)
-    return articles
+    with open(f'up_feedbacks/check_article.json', 'w', encoding='UTF-8') as outfile:
+        json.dump(dict_article, outfile,ensure_ascii=False)
+    return dict_article
 
 
 def final_dict(url):
+    options = Options()
+
+    prefs = {'download.default_directory': r'C:\Users\ikaty\PycharmProjects\parser_margin\excel_docs'}
+
+    options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     driver.get(url)
     cookies = pickle.load(open(f'cookies_mpboost.py', 'rb'))
     for cookie in cookies:
@@ -155,6 +148,8 @@ def final_dict(url):
         if soup.findAll('p', text = re.compile('Доступных отзывов нет')):
             if dict_article.get(key_word)[3]!='1':
                 dict_article.get(key_word)[3] = '-'
+            else:
+                dict_article.get(key_word)[3] != '+'
         search_article_button = driver.find_element(By.TAG_NAME, 'input')
         search_article_button.click()
         time.sleep(1)
@@ -168,7 +163,7 @@ def final_dict(url):
 
 
 def get_feedback_opponent(table_id):
-    with open('up_feedbacks/check_article.json','r',encoding='UTF-8') as f:
+    with open('up_feedbacks/check_article.json', 'r', encoding='UTF-8') as f:
         dict_article = json.load(f)
     for article in dict_article:
         range_name =dict_article.get(article)[2]
