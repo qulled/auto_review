@@ -1,8 +1,6 @@
 import requests
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import datetime as dt
 import logging
@@ -11,6 +9,9 @@ import pickle
 from logging.handlers import RotatingFileHandler
 import time
 import json
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
 
 
 class color:
@@ -25,26 +26,12 @@ class color:
    UNDERLINE = '\033[4m'
    END = '\033[0m'
 
-options = Options()
-
-prefs = {'download.default_directory': r'C:\Users\ikaty\PycharmProjects\parser_margin\excel_docs'}
-
-options.add_experimental_option('prefs', prefs)
-options.add_argument("--disable-blink-features")
-options.add_argument("--disable-blink-features=AutomationControlled")
-options.add_argument("start-maximized")
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-options.add_experimental_option('useAutomationExtension', False)
-options.add_argument('--headless')
-
-driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
-
-driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-driver.execute_cdp_cmd('Network.setUserAgentOverride', {
-    "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36'})
-
 
 def parsing_info_for_bot_alert(url):
+    options = Options()
+    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
     driver.get(url)
     cookies = pickle.load(open(f'cookies_mpboost.py', 'rb'))
     for cookie in cookies:
